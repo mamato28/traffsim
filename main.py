@@ -1,5 +1,3 @@
-#commit test add at line 1
-
 import pygame
 import random
 import time
@@ -24,6 +22,12 @@ car_image_RL = pygame.transform.scale(car_image_RL, (90, 36))
 
 car_image_LR = pygame.image.load('small_car_left_to_right.png')
 car_image_LR = pygame.transform.scale(car_image_LR, (90, 36))
+
+car_image_UD1 = pygame.image.load('small_car_up_to_down_wheel_left.png')
+car_image_UD1 = pygame.transform.scale(car_image_UD1, (36, 90))
+
+car_image_UD2 = pygame.image.load('small_car_up_to_down_wheel_right.png')
+car_image_UD2 = pygame.transform.scale(car_image_UD2, (36, 90))
 
 
 
@@ -56,7 +60,7 @@ class SmallCar():
     def move(self):
         if self.direction == 'left':
             self.x -= self.speed  # Move left
-        else:
+        else:       # self.direction ==  'right'
             self.x += self.speed  # Move right
 
         
@@ -105,8 +109,8 @@ class SmallCar():
             if current_light == 'red' and stop_line_x_min < self.x < stop_line_x_max:
                 self.speed = 0
         else:
-            stop_line_x_min = SCREEN_WIDTH * 0.355  # Adjusted for left-to-right traffic
-            stop_line_x_max = SCREEN_WIDTH * 0.370
+            stop_line_x_min = SCREEN_WIDTH * 0.350  # Adjusted for left-to-right traffic
+            stop_line_x_max = SCREEN_WIDTH * 0.365
             if current_light == 'red' and stop_line_x_min < self.x < stop_line_x_max:
                 self.speed = 0
 
@@ -114,8 +118,9 @@ class SmallCar():
         # pygame.draw.rect(surface, self.color, (self.x, self.y, self.width, self.height))
         if self.direction == 'left':
             surface.blit(car_image_RL, (self.x, self.y))
-        else:
+        elif self.direction == 'right':
             surface.blit(car_image_LR, (self.x, self.y))
+        
         
         speed_text = font_speed.render(f'Speed: {self.speed}', True, BLACK)
         surface.blit(speed_text, (self.x + self.width // 2 - speed_text.get_width() // 2, self.y - 20))
@@ -124,6 +129,69 @@ class SmallCar():
 # Initialize lists for cars
 small_cars_right_to_left = []
 small_cars_left_to_right = []
+
+
+#==============================================================================
+class SmallCar_UD():
+    last_add_time = time.time()  # Class variable to track last add time
+    next_add_time = last_add_time + random.randint(1, 2)  # Initialize the next add time
+
+    def __init__(self, x, y, direction):
+        self.width = 36
+        self.height = 90
+        self.x = x
+        self.y = y
+        self.direction = direction
+        self.speed = random.randint(1, 10)
+        
+        
+
+    def move_UD(self):
+        if self.direction == 'down' :
+            self.y += self.speed
+
+        
+    def detectrange_UD(self, other_cars):
+        for car in other_cars:
+            if car != self:
+                if self.direction == 'down' and self.y < car.y and car.y - self.y <= 110:  
+                    self.speed = max(0, self.speed - 5)  # Stop the car to prevent overlap
+                    return
+        
+        self.speed = random.randint(1, 10)
+
+    
+    def randomappear_UD():
+        appearpossibility = random.randint(1, 5)
+        return appearpossibility > 1  # if > 3 return True, else return False
+        
+    
+    def calculatelastadd_UD():
+        current_time = time.time()
+        if current_time >= SmallCar_UD.next_add_time:
+            SmallCar_UD.next_add_time = current_time + random.randint(1, 2)
+            return True
+        return False
+
+            
+    def stopatred_UD(self, current_light):
+        if self.direction == 'down':
+            stop_line_y_min = SCREEN_HEIGHT * 0.370
+            stop_line_y_max = SCREEN_HEIGHT * 0.385
+            if current_light == 'red' and stop_line_y_min < self.y < stop_line_y_max:
+                self.speed = 0
+    
+    
+    def draw_UD(self, surface):
+        
+        if self.direction == 'down':
+            surface.blit(car_image_UD1, (self.x, self.y))
+        
+        speed_text = font_speed.render(f'Speed: {self.speed}', True, BLACK)
+        surface.blit(speed_text, (self.x + self.width // 2 - speed_text.get_width() // 2, self.y - 20))    
+
+
+small_cars_up_to_down = []
 
 #==============================================================================
 
@@ -210,6 +278,9 @@ while running:
     if len(small_cars_left_to_right) > 20:
         small_cars_left_to_right.pop(0)
 
+    if len(small_cars_up_to_down) > 20:
+        small_cars_up_to_down.pop(0)
+
     if SmallCar.calculatelastadd():
         if random.choice([True, False]):  # Randomly choose direction
             if len(small_cars_right_to_left) == 0 or small_cars_right_to_left[-1].x < SCREEN_WIDTH - 100:
@@ -220,7 +291,10 @@ while running:
                 if SmallCar.randomappear():
                     small_cars_left_to_right.append(SmallCar(0, SCREEN_HEIGHT * 0.785, direction='right'))
 
-    
+    if SmallCar_UD.calculatelastadd_UD():
+        if len(small_cars_up_to_down) == 0 or small_cars_up_to_down[-1].y > 100 :
+            if SmallCar_UD.randomappear_UD():
+                small_cars_up_to_down.append(SmallCar_UD(SCREEN_WIDTH * 0.5, 0, direction='down'))
     
     
     for small_car in small_cars_right_to_left:
@@ -235,6 +309,12 @@ while running:
         small_car.detectrange(small_cars_left_to_right)
         small_car.stopatred(traffic_light.current_light)
         small_car.move()
+
+    for small_car in small_cars_up_to_down:
+        small_car.draw_UD(screen)
+        small_car.detectrange_UD(small_cars_up_to_down)
+        small_car.stopatred_UD(traffic_light.current_light)
+        small_car.move_UD()
 
     pygame.display.flip()  # Update screen
     pygame.time.delay(1000 // 20)  # 20 FPS
