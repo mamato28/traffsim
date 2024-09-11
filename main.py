@@ -17,23 +17,23 @@ BLACK = (0, 0, 0)
 GREEN = (114, 160, 91)
 ORANGE = (255, 165, 0)
 
-car_image_RL = pygame.image.load('small_car_right_to_left.png')
+car_image_RL = pygame.image.load('pictures/car_left.png')
 car_image_RL = pygame.transform.scale(car_image_RL, (90, 36))
 
-car_image_LR = pygame.image.load('small_car_left_to_right.png')
+car_image_LR = pygame.image.load('pictures/car_right.png')
 car_image_LR = pygame.transform.scale(car_image_LR, (90, 36))
 
-car_image_UD1 = pygame.image.load('small_car_up_to_down_wheel_left.png')
-car_image_UD1 = pygame.transform.scale(car_image_UD1, (36, 90))
+# car_image_UD1 = pygame.image.load('pictures/car_down.png')
+# car_image_UD1 = pygame.transform.scale(car_image_UD1, (36, 90))
 
-car_image_UD2 = pygame.image.load('small_car_up_to_down_wheel_right.png')
-car_image_UD2 = pygame.transform.scale(car_image_UD2, (36, 90))
+# car_image_UD2 = pygame.image.load('pictures/car_down.png')
+# car_image_UD2 = pygame.transform.scale(car_image_UD2, (36, 90))
 
 
 
 font_speed = pygame.font.Font(None, 24)
 
-road_image = pygame.image.load('road.png')
+road_image = pygame.image.load('pictures/road.png')
 road_image = pygame.transform.scale(road_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 class SmallCar():
@@ -132,33 +132,96 @@ small_cars_left_to_right = []
 
 
 #==============================================================================
+
+
+
 class SmallCar_UD():
     last_add_time = time.time()  # Class variable to track last add time
     next_add_time = last_add_time + random.randint(1, 2)  # Initialize the next add time
 
     def __init__(self, x, y, direction):
-        self.width = 36
+        self.car_image = pygame.image.load('pictures/car_down.png')
+        self.car_width, self.car_height = self.car_image.get_size()
+        self.width = 38
         self.height = 90
-        self.x = x
+        self.x = SCREEN_WIDTH*0.5
         self.y = y
         self.direction = direction
-        self.speed = random.randint(1, 10)
+        self.y_speed = random.randint(1, 10)
+        self.x_speed = 5
+        self.rotation_angle = 0
+        self.rotation_speed = 5
+        self.moving_down = True
+        self.turning_direction = None
+        self.timer_turn = 60    # for 60 seconds it wont change the turning direction, but it should vanish before 60 seconds
+        # self.turn_decider = True
         
-        
-
     def move_UD(self):
         if self.direction == 'down' :
-            self.y += self.speed
+            if self.moving_down :
+                self.y += self.y_speed
+                # 分left or right
+                if self.y > SCREEN_HEIGHT*0.385:
+                    self.moving_down = False
+        
+        # print(self.x)
+    
+    def choose_turning_direction_UD(self):
+        if self.turning_direction is None:
+            self.turn_direction = random.choice(['right', 'left'])
 
+    def turn_after_choose_UD(self):
+        if self.turn_direction == 'right' :
+            self.turn_right_UD()
+            self.timer_turn -= 1
+            if self.timer_turn > 1:
+                self.turning_direction = 'right'
+        else:
+            self.turn_left_UD()
+            self.timer_turn -= 1
+            if self.timer_turn > 1:
+                self.turning_direction = 'left'
+    
+
+    def turn_left_UD(self):
+        # print("Turning left")
+        if self.rotation_angle < 90:
+            self.rotation_angle += self.rotation_speed
+        self.x += self.x_speed
+        # print(self.x_speed)
+        if self.y < SCREEN_HEIGHT*0.73:
+            self.y += self.y_speed
+
+
+
+    def turn_right_UD(self):
+        # print(self.x)
+        # print("Turning right")
         
+        if self.y > SCREEN_HEIGHT*0.575:
+            if self.rotation_angle > -90:
+                self.rotation_angle -= self.rotation_speed
+
+            if self.x > SCREEN_WIDTH*0.4 :
+                self.x -= self.x_speed
+            else :
+                self.x_speed += random.uniform(-1, 1)
+                self.x_speed = max(1, min(10, self.x_speed))
+                self.x -= self.x_speed
+        
+        if self.y < SCREEN_HEIGHT * 0.62:
+            self.y += self.y_speed
+
+
     def detectrange_UD(self, other_cars):
-        for car in other_cars:
-            if car != self:
-                if self.direction == 'down' and self.y < car.y and car.y - self.y <= 110:  
-                    self.speed = max(0, self.speed - 5)  # Stop the car to prevent overlap
-                    return
-        
-        self.speed = random.randint(1, 10)
+        if self.y <= SCREEN_HEIGHT*0.5:
+            for car in other_cars:
+                if car != self:
+                    if self.direction == 'down' and self.y < car.y and car.y - self.y <= 110:  
+                        self.y_speed = max(0, self.y_speed - 5)  # Stop the car to prevent overlap
+                        return
+            
+            self.y_speed = random.randint(1, 10)
 
     
     def randomappear_UD():
@@ -178,29 +241,51 @@ class SmallCar_UD():
         if self.direction == 'down':
             stop_line_y_min = SCREEN_HEIGHT * 0.370
             stop_line_y_max = SCREEN_HEIGHT * 0.385
-            if current_light == 'red' and stop_line_y_min < self.y < stop_line_y_max:
-                self.speed = 0
+            if current_light == 'green' and stop_line_y_min < self.y < stop_line_y_max:
+                self.y_speed = 0
     
     
-    def draw_UD(self, surface):
+    def draw_UD(self, screen):
         
         if self.direction == 'down':
-            surface.blit(car_image_UD1, (self.x, self.y))
-        
-        speed_text = font_speed.render(f'Speed: {self.speed}', True, BLACK)
-        surface.blit(speed_text, (self.x + self.width // 2 - speed_text.get_width() // 2, self.y - 20))    
+            rotated_car = pygame.transform.rotate(self.car_image, self.rotation_angle)
+                
+                # Get the new rect for the rotated car image
+            rotated_rect = rotated_car.get_rect(center=(self.x+15, self.y+50))
+            
+            # Draw the rotated car image
+            screen.blit(rotated_car, rotated_rect.topleft)
+            # if self.turn_decider:
+            #     screen.blit(self.car_image, (self.x, self.y))
+            #     if self.y > SCREEN_HEIGHT * 0.377 :
+            #         self.turn_decider = False
+            
+            # if self.y > SCREEN_HEIGHT * 0.377 :
+            #     rotated_car = pygame.transform.rotate(self.car_image, self.rotation_angle)
+                
+            #     # Get the new rect for the rotated car image
+            #     rotated_rect = rotated_car.get_rect(center=(self.x, self.y))
+                
+            #     # Draw the rotated car image
+            #     screen.blit(rotated_car, rotated_rect.topleft)
+            
+            # else:
+            #     surface.blit(car_image_UD1, (self.x, self.y))
+            speed_text = font_speed.render(f'Speed: {self.y_speed}', True, BLACK)
+            screen.blit(speed_text, (self.x + self.width // 2 - speed_text.get_width() // 2, self.y))    
 
 
 small_cars_up_to_down = []
+
 
 #==============================================================================
 
 start_time = time.time()
 
 # Define the traffic light cycle times
-green_time = 5  # seconds
+green_time = 10  # seconds
 orange_time = 1  # seconds
-red_time = 15  # seconds
+red_time = 10  # seconds
 
 current_light = 'green'
 font_light = pygame.font.Font(None, 36)
@@ -297,24 +382,32 @@ while running:
                 small_cars_up_to_down.append(SmallCar_UD(SCREEN_WIDTH * 0.5, 0, direction='down'))
     
     
-    for small_car in small_cars_right_to_left:
-        small_car.draw(screen)
-        small_car.detectrange(small_cars_right_to_left)
-        small_car.stopatred(traffic_light.current_light)
-        small_car.move()
+    # for small_car in small_cars_right_to_left:
+    #     small_car.draw(screen)
+    #     small_car.detectrange(small_cars_right_to_left)
+    #     small_car.stopatred(traffic_light.current_light)
+    #     small_car.move()
 
     
-    for small_car in small_cars_left_to_right:
-        small_car.draw(screen)
-        small_car.detectrange(small_cars_left_to_right)
-        small_car.stopatred(traffic_light.current_light)
-        small_car.move()
+    # for small_car in small_cars_left_to_right:
+    #     small_car.draw(screen)
+    #     small_car.detectrange(small_cars_left_to_right)
+    #     small_car.stopatred(traffic_light.current_light)
+    #     small_car.move()
 
     for small_car in small_cars_up_to_down:
-        small_car.draw_UD(screen)
+        small_car.move_UD()
+        if not small_car.moving_down:
+            small_car.choose_turning_direction_UD()
+            small_car.turn_after_choose_UD()
+
+            # small_car.turn_right_UD()
+
+        
         small_car.detectrange_UD(small_cars_up_to_down)
         small_car.stopatred_UD(traffic_light.current_light)
-        small_car.move_UD()
+        small_car.draw_UD(screen)
+        
 
     pygame.display.flip()  # Update screen
     pygame.time.delay(1000 // 20)  # 20 FPS

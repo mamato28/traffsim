@@ -1,76 +1,114 @@
 import pygame
 import sys
+import random
 
-# Initialize Pygame
 pygame.init()
 
-# Screen dimensions
-screen_width = 800
-screen_height = 600
+screen_width = 1000
+screen_height = 800
 screen = pygame.display.set_mode((screen_width, screen_height))
 
-# Colors
-black = (0, 0, 0)
 white = (255, 255, 255)
+grey = (196, 196, 196)
 
-# Rect dimensions
-rect_width = 30
-rect_height = 90
+bg_image = pygame.image.load('pictures/bg_4_25.png')
+bg_image = pygame.transform.scale(bg_image, (screen_width, screen_height))
 
-# Initial position and rotation
-x = screen_width * 0.5
-y = 0
-rotation_angle = 0
 
-# Define the movement speeds
-y_speed = 5
-x_speed = 5
-rotation_speed = 2  # Rotation speed in degrees per frame
+class Car:
+    def __init__(self, image_path):
+        self.car_image = pygame.image.load(image_path)
+        self.car_width, self.car_height = self.car_image.get_size()
+        self.x = screen_width * 0.5
+        self.y = 0
+        self.rotation_angle = 0
+        # self.y_speed = 5
+        self.y_speed = random.randint(5,10)
+        # self.x_speed = random.randint(5,10)
+        self.x_speed = 3
+        self.rotation_speed = 4.5  # Rotation speed in degrees per frame
+        self.moving_down = True
 
-# Main loop
+    def move_down(self):
+        if self.moving_down:
+            self.y_speed += random.uniform(-1, 1)
+            self.y_speed = max(1, min(10, self.y_speed))  # clamp the y_speed to the range [1, 10]
+   
+            self.y += self.y_speed
+
+            # print('y: '+ self.y + 'y_speed: ' + self.y_speed)
+            # print(f" y: {self.y} + " + f" y_speed: {self.y_speed}")
+
+            if self.y >= screen_height * 0.5:
+                self.moving_down = False
+
+    def turn_right(self):
+        # self.x_speed += random.uniform(-1, 1)
+        # self.x_speed = max(1, min(10, self.x_speed))  # clamp the y_speed to the range [1, 10]
+   
+        if self.rotation_angle > -90:
+            self.rotation_angle -= self.rotation_speed
+        
+        if self.x > screen_width*0.4 :
+            self.x -= self.x_speed
+        else :
+            self.x_speed += random.uniform(-1, 1)
+            self.x_speed = max(1, min(10, self.x_speed))
+            self.x -= self.x_speed
+            
+        # print(self.x_speed)
+        if self.y < screen_height * 0.5:
+            self.y += self.y_speed
+
+        
+
+
+    def turn_left(self):
+        if self.rotation_angle < 90:
+            self.rotation_angle += self.rotation_speed
+        self.x += self.x_speed
+        # print(self.x_speed)
+        if self.y < screen_height * 0.5:
+            self.y += self.y_speed
+        
+
+    
+        
+
+    def draw(self, screen):
+        # Rotate the car image
+        rotated_car = pygame.transform.rotate(self.car_image, self.rotation_angle)
+        # Get the new rect for the rotated car image
+        rotated_rect = rotated_car.get_rect(center=(self.x, self.y))
+        # Draw the rotated car image
+        screen.blit(rotated_car, rotated_rect.topleft)
+
+
+car = Car('pictures/car_down.png')
+
 running = True
-moving_down = True
-
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    
-    # Clear the screen
-    screen.fill(white)
-    
-    if moving_down:
-        y += y_speed
-        if y >= 100:
-            moving_down = False
-    else:
-        # Gradually increase the rotation angle to 90 degrees
-        if rotation_angle < 90:
-            rotation_angle += rotation_speed
-        x += x_speed
-        if y < screen_height * 0.5:
-            y += y_speed
-        if x >= screen_width - rect_width:
-            x = screen_width - rect_width
 
-    # Create a surface to draw the rectangle
-    rect_surface = pygame.Surface((rect_width, rect_height), pygame.SRCALPHA)
-    rect_surface.fill(black)
+    screen.blit(bg_image,(0,0))
+
+
+
+    car.move_down()
+
+    if not car.moving_down:
+        # car.turn_left()
+        car.turn_right()
     
-    # Rotate the surface
-    rotated_surface = pygame.transform.rotate(rect_surface, rotation_angle)
+    car.draw(screen)
     
-    # Get the new rect for the rotated surface
-    rotated_rect = rotated_surface.get_rect(center=(x, y))
-    
-    # Draw the rotated rectangle
-    screen.blit(rotated_surface, rotated_rect.topleft)
-    
-    # Update the screen
+
+
     pygame.display.flip()
-    
-    # Frame rate
     pygame.time.Clock().tick(60)
 
 pygame.quit()
 sys.exit()
+
