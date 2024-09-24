@@ -382,18 +382,18 @@ while running:
                 small_cars_up_to_down.append(SmallCar_UD(SCREEN_WIDTH * 0.5, 0, direction='down'))
     
     
-    # for small_car in small_cars_right_to_left:
-    #     small_car.draw(screen)
-    #     small_car.detectrange(small_cars_right_to_left)
-    #     small_car.stopatred(traffic_light.current_light)
-    #     small_car.move()
+    for small_car in small_cars_right_to_left:
+        small_car.draw(screen)
+        small_car.detectrange(small_cars_right_to_left)
+        small_car.stopatred(traffic_light.current_light)
+        small_car.move()
 
     
-    # for small_car in small_cars_left_to_right:
-    #     small_car.draw(screen)
-    #     small_car.detectrange(small_cars_left_to_right)
-    #     small_car.stopatred(traffic_light.current_light)
-    #     small_car.move()
+    for small_car in small_cars_left_to_right:
+        small_car.draw(screen)
+        small_car.detectrange(small_cars_left_to_right)
+        small_car.stopatred(traffic_light.current_light)
+        small_car.move()
 
     for small_car in small_cars_up_to_down:
         small_car.move_UD()
