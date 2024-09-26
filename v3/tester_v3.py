@@ -66,15 +66,29 @@ class World_Grid:
                                                        row * BLOCK_SIZE + BLOCK_SIZE // 2))
                 self.screen.blit(text_surf, text_rect)  # Draw the text
 
-
+car_image = pygame.image.load('v2/pictures_v2/car_left.png')
+car_width, car_height = car_image.get_size()
 
 class Car:
     def __init__(self, x, y, speed, direction):
-        self.rect = pygame.Rect(x, y, 50, 30)  # The car's rectangle
+        if direction == (-1, 0):  # Moving left
+            self.car_image = pygame.image.load('v2/pictures_v2/car_left.png')
+        elif direction == (1, 0):  # Moving right
+            self.car_image = pygame.image.load('v2/pictures_v2/car_right.png')
+        elif direction == (0, -1):  # Moving up
+            self.car_image = pygame.image.load('v2/pictures_v2/car_up.png')
+        elif direction == (0, 1):  # Moving down
+            self.car_image = pygame.image.load('v2/pictures_v2/car_down.png')
+
+
+
+        # self.car_image = pygame.image.load('v2/pictures_v2/car_left.png')
+        self.original_image = self.car_image  # Store the original image
+        self.rect = pygame.Rect(x, y, 90, 36)  # The car's rectangle
         self.speed = speed
         self.direction = direction  # Direction as a vector, e.g., (-1, 0) for left
         self.has_turned = False
-        
+        self.rotation_angle = 0
 
     def move_forward(self):
         """Move the car forward in its current direction."""
@@ -82,25 +96,38 @@ class Car:
         self.rect.y += self.direction[1] * self.speed
 
     def turn_left(self):
-        """Turn the car 90 degrees to the left (counterclockwise)."""
-        self.direction = (-self.direction[1], self.direction[0])
+        """Turn the car 90 degrees to the left based on the current direction."""
+        if self.direction == (1, 0):  # Moving right
+            self.rotate_car(90)  # Turn counterclockwise to move up
+        elif self.direction == (-1, 0):  # Moving left
+            self.rotate_car(90)  # Turn clockwise to move down
+        elif self.direction == (0, -1):  # Moving up
+            self.rotate_car(90)  # Turn counterclockwise to move left
+        elif self.direction == (0, 1):  # Moving down
+            self.rotate_car(-90)  # Turn clockwise to move right
+
+        # Update the direction based on the turn
+        self.direction = (self.direction[1], -self.direction[0])
+
 
     def turn_right(self):
-        """Turn the car 90 degrees to the right (clockwise)."""
-        # Rotate the direction 90 degrees clockwise
-        
-        self.direction = (-self.direction[1], self.direction[0]) # -1,0 moving left
-        
-
-        # Update the car's position to move in the new direction
+        """Turn the car 90 degrees to the right based on the current direction."""
         if self.direction == (1, 0):  # Moving right
-            self.rect.x += self.speed
+            self.rotate_car(-90)  # Turn clockwise to move down
         elif self.direction == (-1, 0):  # Moving left
-            self.rect.x -= self.speed
-        elif self.direction == (0, 1):  # Moving down
-            self.rect.y += self.speed
+            self.rotate_car(270)  # Turn counterclockwise to move up
         elif self.direction == (0, -1):  # Moving up
-            self.rect.y -= self.speed
+            self.rotate_car(-90)  # Turn clockwise to move right
+        elif self.direction == (0, 1):  # Moving down
+            self.rotate_car(90)  # Turn counterclockwise to move left
+
+        # Update the direction based on the turn
+        self.direction = (-self.direction[1], self.direction[0])
+
+    def rotate_car(self, angle):
+        """Rotate the car by the specified angle."""
+        self.rotation_angle += angle
+        self.car_image = pygame.transform.rotate(self.car_image, self.rotation_angle)
 
 
     def handle_intersection(self, world_grid):
@@ -108,22 +135,24 @@ class Car:
         grid_x = self.rect.x // BLOCK_SIZE + 1
         grid_y = self.rect.y // BLOCK_SIZE + 1
         current_block = (grid_x, grid_y)
+
         if current_block == (5, 4) and not self.has_turned:
             possible_directions = world_grid.check_intersection(current_block)
             
             if "right" in possible_directions:
-                self.turn_right()  # Turn the car right (downward movement)
+                # self.turn_left()
+                self.turn_right()  # Turn the car right (upward movement)
                 self.has_turned = True  # Ensure the car only turns once at this intersection
 
-        # possible_directions = world_grid.check_intersection(current_block)
+    def draw(self, screen):
+        """Draw the rotated car image at its current position."""
+        # Get the rotated car image and re-align its position
+        rotated_car = self.car_image
+        rotated_rect = rotated_car.get_rect(center=self.rect.center)
 
-        # if possible_directions:
-        #     # Decide whether to turn based on intersection logic
-        #     if "left" in possible_directions:
-        #         self.turn_left()
-        #     elif "right" in possible_directions:
-        #         self.turn_right()
-        #     # If "forward", keep moving in the current direction
+        # Draw the rotated car image
+        screen.blit(rotated_car, rotated_rect.topleft)
+
     
     
 
@@ -181,6 +210,9 @@ def main():
     # Create a car initially moving from right to left
     car = Car(SCREEN_WIDTH - 100, 350, 5, (-1, 0))
 
+    # left to right
+    # car = Car(100, 350, 5, (1, 0))
+
     running = True
 
     while running:
@@ -190,9 +222,11 @@ def main():
         # Move the car forward and handle intersections
         car.move_forward()
         car.handle_intersection(world_grid)
+        car.draw(screen)
 
         # Draw the car
-        pygame.draw.rect(screen, BLACK, car.rect)
+        # pygame.draw.rect(screen, BLACK, car.rect)
+        
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
