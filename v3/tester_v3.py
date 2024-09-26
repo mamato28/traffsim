@@ -104,7 +104,7 @@ class Car:
         elif self.direction == (0, -1):  # Moving up
             self.rotate_car(90)  # Turn counterclockwise to move left
         elif self.direction == (0, 1):  # Moving down
-            self.rotate_car(-90)  # Turn clockwise to move right
+            self.rotate_car(90)  # Turn clockwise to move right
 
         # Update the direction based on the turn
         self.direction = (self.direction[1], -self.direction[0])
@@ -119,7 +119,7 @@ class Car:
         elif self.direction == (0, -1):  # Moving up
             self.rotate_car(-90)  # Turn clockwise to move right
         elif self.direction == (0, 1):  # Moving down
-            self.rotate_car(90)  # Turn counterclockwise to move left
+            self.rotate_car(270)  # Turn counterclockwise to move left
 
         # Update the direction based on the turn
         self.direction = (-self.direction[1], self.direction[0])
@@ -208,10 +208,19 @@ def main():
     load_and_add_images(world_grid)
 
     # Create a car initially moving from right to left
-    car = Car(SCREEN_WIDTH - 100, 350, 5, (-1, 0))
+    # car = Car(SCREEN_WIDTH - 100, 350, 5, (-1, 0))
 
     # left to right
     # car = Car(100, 350, 5, (1, 0))
+
+    # up to down
+    # car = Car(450, 100, 5, (0, 1))
+
+
+    # down to up
+    car = Car(450, SCREEN_HEIGHT - 100, 5, (0, -1))
+
+
 
     running = True
 
