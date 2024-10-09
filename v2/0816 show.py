@@ -13,7 +13,7 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 white = (255, 255, 255)
 
 #========== left turn
-car_image = pygame.image.load('pictures/car_down.png')
+car_image = pygame.image.load('v2/pictures_v2/car_down.png')
 car_width, car_height = car_image.get_size()
 
 
@@ -49,24 +49,24 @@ while running:
             moving_down = False
     else:
         
-        #========== left turn
-        if rotation_angle < 90:
-            rotation_angle += rotation_speed
-        x += x_speed
-        if y < screen_height * 0.5:
-            y += y_speed
-        if x >= screen_width - car_width:
-            x = screen_width - car_width
-
-
-        #========== right turn
-        # if rotation_angle > -90:
-        #     rotation_angle -= rotation_speed
-        # x -= x_speed
+        # #========== left turn
+        # if rotation_angle < 90:
+        #     rotation_angle += rotation_speed
+        # x += x_speed
         # if y < screen_height * 0.5:
         #     y += y_speed
         # if x >= screen_width - car_width:
         #     x = screen_width - car_width
+
+
+        #========== right turn
+        if rotation_angle > -90:
+            rotation_angle -= rotation_speed
+        x -= x_speed
+        if y < screen_height * 0.5:
+            y += y_speed
+        if x >= screen_width - car_width:
+            x = screen_width - car_width
 
 
 
